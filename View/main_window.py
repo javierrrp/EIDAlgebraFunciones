@@ -54,6 +54,8 @@ class MainWindow(QMainWindow):
 
 
         #Botones
+
+        # --- Botones de exponentes ---
         self.x2_button = QPushButton("x\u00B2")
         self.x2_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
 
@@ -63,12 +65,14 @@ class MainWindow(QMainWindow):
         self.exp_button = QPushButton("^")
         self.exp_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
 
+        # --- Botones de parentesis --- 
         self.parentesisopen_button = QPushButton("(")
         self.parentesisopen_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
 
         self.parentesisclose_button = QPushButton(")")
         self.parentesisclose_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
 
+        # --- Botones de operaciones básicas ---
         self.plus_button = QPushButton("+")
         self.plus_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
 
@@ -81,8 +85,11 @@ class MainWindow(QMainWindow):
         self.divide_button = QPushButton("÷")
         self.divide_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
 
+        #--- Boton igual ---
         self.equal_button = QPushButton("=")
         self.equal_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        # --- Raiz ---
 
         self.raiz_button = QPushButton("√")
         self.raiz_button.setFixedSize(40, 40)
@@ -91,6 +98,7 @@ class MainWindow(QMainWindow):
         self.x_button = QPushButton("x")
         self.x_button.setFixedSize(40, 40)
 
+        # --- Punto decimal ---
         self.point_button = QPushButton(".")
         self.point_button.setFixedSize(40, 40)
 
@@ -132,6 +140,8 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.domain_label)
         left_layout.addWidget(self.intercepts_label)
         left_layout.addWidget(self.evaluation_label)
+
+        # --- Crear filas ---
         buttons_fila1_layout = QHBoxLayout()
         buttons_fila1_layout.setSpacing(10)
 
