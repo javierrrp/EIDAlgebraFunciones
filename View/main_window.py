@@ -51,7 +51,24 @@ class MainWindow(QMainWindow):
         self.evaluation_label = QLabel("Evaluación: ...")
         self.error_label = QLabel()
         self.error_label.setObjectName("errorLabel")
-        
+
+
+        #Botones
+        self.x2_button = QPushButton("x\u00B2")
+        self.x2_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        self.x3_button = QPushButton("x\u00B3")
+        self.x3_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        self.exp_button = QPushButton("^")
+        self.exp_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        self.parentesisopen_button = QPushButton("(")
+        self.parentesisopen_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        self.parentesisclose_button = QPushButton(")")
+        self.parentesisclose_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
         left_layout.addWidget(title_label)
         left_layout.addLayout(form_layout)
         left_layout.addWidget(self.analyze_button)
@@ -60,6 +77,20 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.domain_label)
         left_layout.addWidget(self.intercepts_label)
         left_layout.addWidget(self.evaluation_label)
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(10) # Espacio entre los botones
+
+        # 2. Añadir los botones al layout horizontal
+        buttons_layout.addWidget(self.x2_button)
+        buttons_layout.addWidget(self.x3_button)
+        buttons_layout.addWidget(self.exp_button)
+        buttons_layout.addWidget(self.parentesisopen_button)
+        buttons_layout.addWidget(self.parentesisclose_button)
+        buttons_layout.addStretch() # Empuja los botones a la izquierda
+
+        # 3. Añadir el layout de botones al layout vertical principal
+        left_layout.addLayout(buttons_layout)
+
         left_layout.addStretch()
         left_layout.addWidget(self.error_label)
 
