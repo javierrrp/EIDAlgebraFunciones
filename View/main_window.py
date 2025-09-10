@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QLabel, QFormLayout,
-                             QFrame)
+                             QFrame, QGridLayout)
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt, QSize
 
@@ -69,6 +69,61 @@ class MainWindow(QMainWindow):
         self.parentesisclose_button = QPushButton(")")
         self.parentesisclose_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
 
+        self.plus_button = QPushButton("+")
+        self.plus_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        self.minus_button = QPushButton("-")
+        self.minus_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        self.multiply_button = QPushButton("×")
+        self.multiply_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        self.divide_button = QPushButton("÷")
+        self.divide_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        self.equal_button = QPushButton("=")
+        self.equal_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+
+        self.raiz_button = QPushButton("√")
+        self.raiz_button.setFixedSize(40, 40)
+
+        # --- Variable principal 'x' ---
+        self.x_button = QPushButton("x")
+        self.x_button.setFixedSize(40, 40)
+
+        self.point_button = QPushButton(".")
+        self.point_button.setFixedSize(40, 40)
+
+        # --- Constantes Matemáticas ---
+        self.pi_button = QPushButton("π")
+        self.pi_button.setFixedSize(40, 40)
+        self.e_button = QPushButton("e")
+        self.e_button.setFixedSize(40, 40)
+
+        # --- Funciones Trigonométricas ---
+        self.sin_button = QPushButton("sin")
+        self.sin_button.setFixedSize(50, 40)
+        self.cos_button = QPushButton("cos")
+        self.cos_button.setFixedSize(50, 40)
+        self.tan_button = QPushButton("tan")
+        self.tan_button.setFixedSize(50, 40)
+
+        # --- Funciones Logarítmicas ---
+        self.log_button = QPushButton("log")  # Logaritmo base 10
+        self.log_button.setFixedSize(50, 40)
+        self.ln_button = QPushButton("ln")    # Logaritmo natural
+        self.ln_button.setFixedSize(50, 40)
+
+        # --- Botones de control ---
+        self.clear_button = QPushButton("C")  # Limpiar todo
+        self.clear_button.setFixedSize(40, 40)
+        self.del_button = QPushButton("DEL")  # Borrar último caracter
+        self.del_button.setFixedSize(40, 40)
+
+
+        
+        #Botones
+
         left_layout.addWidget(title_label)
         left_layout.addLayout(form_layout)
         left_layout.addWidget(self.analyze_button)
@@ -77,19 +132,51 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.domain_label)
         left_layout.addWidget(self.intercepts_label)
         left_layout.addWidget(self.evaluation_label)
-        buttons_layout = QHBoxLayout()
-        buttons_layout.setSpacing(10) # Espacio entre los botones
+        buttons_fila1_layout = QHBoxLayout()
+        buttons_fila1_layout.setSpacing(10)
+
+        buttons_fila2_layout = QHBoxLayout()
+        buttons_fila2_layout.setSpacing(10)
+
+        buttons_fila3_layout = QHBoxLayout()
+        buttons_fila3_layout.setSpacing(10)
+
+        buttons_fila4_layout = QHBoxLayout()
+        buttons_fila4_layout.setSpacing(10)
 
         # 2. Añadir los botones al layout horizontal
-        buttons_layout.addWidget(self.x2_button)
-        buttons_layout.addWidget(self.x3_button)
-        buttons_layout.addWidget(self.exp_button)
-        buttons_layout.addWidget(self.parentesisopen_button)
-        buttons_layout.addWidget(self.parentesisclose_button)
-        buttons_layout.addStretch() # Empuja los botones a la izquierda
+        buttons_fila1_layout.addWidget(self.x2_button)
+        buttons_fila1_layout.addWidget(self.x3_button)
+        buttons_fila1_layout.addWidget(self.exp_button)
+        buttons_fila1_layout.addWidget(self.parentesisopen_button)
+        buttons_fila1_layout.addWidget(self.parentesisclose_button)
+        buttons_fila1_layout.addStretch() # Empuja los botones a la izquierda
+
+        buttons_fila2_layout.addWidget(self.plus_button)
+        buttons_fila2_layout.addWidget(self.minus_button)
+        buttons_fila2_layout.addWidget(self.multiply_button)
+        buttons_fila2_layout.addWidget(self.divide_button)
+        buttons_fila2_layout.addWidget(self.equal_button)
+
+
+        buttons_fila3_layout.addWidget(self.raiz_button)
+        buttons_fila3_layout.addWidget(self.x_button)
+        buttons_fila3_layout.addWidget(self.pi_button)
+        buttons_fila3_layout.addWidget(self.e_button)
+        buttons_fila3_layout.addWidget(self.point_button)
+        
+        buttons_fila4_layout.addWidget(self.sin_button)
+        buttons_fila4_layout.addWidget(self.cos_button)
+        buttons_fila4_layout.addWidget(self.tan_button)
+        buttons_fila4_layout.addWidget(self.log_button)
+        buttons_fila4_layout.addWidget(self.ln_button)
+
 
         # 3. Añadir el layout de botones al layout vertical principal
-        left_layout.addLayout(buttons_layout)
+        left_layout.addLayout(buttons_fila1_layout)
+        left_layout.addLayout(buttons_fila2_layout)
+        left_layout.addLayout(buttons_fila3_layout)
+        left_layout.addLayout(buttons_fila4_layout)
 
         left_layout.addStretch()
         left_layout.addWidget(self.error_label)
