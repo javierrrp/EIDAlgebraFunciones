@@ -13,7 +13,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("EID Algebra")
         self.setWindowIcon(QIcon.fromTheme("applications-science"))
-        self.setGeometry(100, 100, 950, 700)
+        self.setGeometry(100, 100, 1200, 700)
+
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
 
         self.apply_styles()
 
