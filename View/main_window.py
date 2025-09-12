@@ -1,8 +1,11 @@
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QLabel, QFormLayout,
                              QFrame, QCompleter)
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt, QSize
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -214,11 +217,12 @@ class MainWindow(QMainWindow):
         right_panel = QFrame()
         right_panel.setObjectName("panel")
         right_layout = QVBoxLayout(right_panel)
-        
-        graph_placeholder = QLabel("📈 Gráficos")
-        graph_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        graph_placeholder.setObjectName("graphPlaceholder")
-        right_layout.addWidget(graph_placeholder)
+                
+        self.figure = Figure(figsize=(5, 3), dpi=100)
+        self.canvas = FigureCanvas(self.figure)
+        self.ax = self.figure.add_subplot(111)
+        self.ax.grid(True, linestyle='--', alpha=0.6)
+        right_layout.addWidget(self.canvas)
 
         main_layout.addWidget(left_panel, 1)
         main_layout.addWidget(right_panel, 2)
