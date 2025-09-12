@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QFrame, QCompleter)
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt, QSize
+from Model.grafico import grafico_funcion
 
 class MainWindow(QMainWindow):
     def __init__(self):
