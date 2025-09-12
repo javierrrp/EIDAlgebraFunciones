@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QLabel, QFormLayout,
                              QFrame, QCompleter)
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import Qt, QSize
 
 class MainWindow(QMainWindow):
@@ -40,10 +40,12 @@ class MainWindow(QMainWindow):
         self.function_input = QLineEdit()
         self.function_input.setPlaceholderText("Ej: (x**3 - 1) / (x - 1)")
         self.function_input.setObjectName("functionInput")
+        self.function_input.setMinimumHeight(80)  # Más alto
+        self.function_input.setFont(QFont("Consolas", 158, QFont.Weight.Bold))
 
         # Autocompletado para funciones
-        functions = ["sin", "cos", "tan", "log", "ln", "sqrt", "pi", "e"]
-        completer = QCompleter(functions)
+        self.functions = ["sin", "cos", "tan", "log", "ln", "sqrt", "pi", "e"]
+        completer = QCompleter(self.functions)
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.function_input.setCompleter(completer)
 
@@ -261,8 +263,6 @@ class MainWindow(QMainWindow):
                 margin-right: 6px;
             }}
             QLineEdit#functionInput {{
-                font-family: "Consolas", "Courier New", monospace;
-                font-size: 16px;
                 background-color: #1e272e;
                 border: 2px solid {SECONDARY_COLOR};
                 border-radius: 8px;
