@@ -74,17 +74,45 @@ class Controller:
 
             self.view.intercepts_label.setText(f"<b>Intersección Eje Y:</b> {y_intercept_str}<br><b>Intersección Eje X:</b> {x_intercept_str}")
 
+            numer, denom = expr.as_numer_denom()
+            range_str = "Todos los reales ℝ"
+
+            try:
+                if x in numer.free_symbols or x in denom.free_symbols:
+                    deg_numer = sp.degree(numer, gen=x)
+                    deg_denom = sp.degree(denom, gen=x)
+
+                    if deg_numer == deg_denom:
+                        lead_numer = numer.coeff(x**deg_numer)
+                        lead_denom = denom.coeff(x**deg_denom)
+                        asymptote = lead_numer / lead_denom
+                        if asymptote != 0:
+                            range_str = f"Todos los reales excepto y = {asymptote}"
+                    elif deg_numer < deg_denom:
+                        range_str = "Todos los reales excepto y = 0"
+            except Exception:
+                range_str = "No se pudo determinar automáticamente."
+
+            self.view.range_label.setText(f"<b>Recorrido:</b> {range_str}")
+
             x_eval = None
             if x_value_text:
                 try:
-                    x_eval = float(x_value_text)
-                    y_eval = self.model.evaluar_punto(expr, x_eval)
+                    x_eval_expr = sp.sympify(x_value_text)
+                    x_eval_float = float(x_eval_expr.evalf())
+
+                    y_eval = self.model.evaluar_punto(expr, x_eval_float)
+
                     if y_eval is not None:
-                        self.view.evaluation_label.setText(f"<b>ƒ({x_eval})</b> = {y_eval:.4g} &nbsp; → &nbsp; <b>Punto:</b> ({x_eval}, {y_eval:.4g})")
+                        self.view.evaluation_label.setText(f"<b>ƒ({x_value_text})</b> = {y_eval:.4g} &nbsp; → &nbsp; <b>Punto:</b> ({x_eval_float:.4g}, {y_eval:.4g})")
                     else:
-                        self.view.evaluation_label.setText(f"<b>ƒ({x_eval})</b> no está definido en el dominio.")
-                except ValueError:
+                        self.view.evaluation_label.setText(f"<b>ƒ({x_value_text})</b> no está definido en el dominio.")
+
+                    x_eval = x_eval_float 
+
+                except (ValueError, sp.SympifyError):
                     self.view.evaluation_label.setText("Valor de x inválido.")
+                    x_eval = None
             else:
                 self.view.evaluation_label.setText("<b>Evaluación:</b> Ingrese un valor para x.")
 
