@@ -1,7 +1,7 @@
 import math
 import re
 import matplotlib.pyplot as plt
-from sympy import symbols, sin, cos, tan, log, sqrt, pi, solveset, E, S
+from sympy import symbols, sin, cos, tan, log, sqrt, pi, E, solveset, S, sympify, limit, oo
 from sympy.core.sympify import SympifyError
 from sympy.parsing.sympy_parser import (
     parse_expr,
@@ -47,37 +47,104 @@ def analizar_funcion(texto_funcion: str):
     }
     try:
         texto = _normalizar_texto(texto_funcion)
-        expr = parse_expr(
-            texto,
-            transformations=TRANSFORMACIONES,
-            local_dict=locales,
-            evaluate=False,
-        )
+        try:
+            expr = parse_expr(
+                texto,
+                transformations=TRANSFORMACIONES,
+                local_dict=locales,
+                evaluate=False,  # Cambiado a False para mejor control
+            )
+        except Exception:
+            # Fallback con sympify
+            expr = sympify(texto, locals=locales, evaluate=False)
         return expr
     except Exception as e:
-        # El Controller captura SympifyError como “Error de sintaxis”
+        # El Controller captura SympifyError como "Error de sintaxis"
         raise SympifyError(str(e))
 
 # ------------------ helpers evaluación ------------------
-def _to_real_float(val, y_max = 1e4):
+def _to_real_float(val):
     try:
         if hasattr(val, "is_real") and val.is_real is False:
             return None
-        vf = float(val.evalf())
-        if not math.isfinite(vf):
+        # Manejar infinitos simbólicos
+        if val == oo or val == -oo:
             return None
-        if abs(vf) > y_max:
+        try:
+            vf = complex(val.evalf())
+            # Si tiene parte imaginaria significativa, descartar
+            if abs(vf.imag) > 1e-10:
+                return None
+            vf = vf.real
+        except Exception:
+            vf = float(val)
+        if not math.isfinite(vf):
             return None
         return vf
     except Exception:
         return None
+
 # ----------------- evalua expresion, devuelve float o none si no es valido en R ----------------
-def evaluar_punto(expresion, valor_x: float, y_max=1e4):
+def evaluar_punto(expresion, valor_x: float):
     try:
-        y = expresion.subs(x, valor_x)
-        return _to_real_float(y, y_max=y_max)
-    except Exception:
+        # Para funciones racionales, intentar simplificar primero
+        expr_trabajo = expresion
+        try:
+            expr_trabajo = expresion.simplify()
+        except Exception:
+            pass
+        
+        # Sustituir el valor
+        y = expr_trabajo.subs(x, valor_x)
+        
+        # Si el resultado aún contiene x, puede ser una indeterminación
+        if y.has(x):
+            try:
+                y = limit(expresion, x, valor_x)
+            except Exception:
+                return None
+        
+        # Manejar casos especiales de SymPy
+        if hasattr(y, 'is_finite') and y.is_finite is False:
+            return None
+        if hasattr(y, 'is_real') and y.is_real is None:
+            return None
+        
+        return _to_real_float(y)
+    except (ZeroDivisionError, ValueError):
         return None
+    except Exception as e:
+        # Manejar específicamente el error de formato que mencionaste
+        error_str = str(e).lower()
+        if any(keyword in error_str for keyword in ["format", "zero._format", "sympify", "nan"]):
+            return None
+        return None
+
+def obtener_asintotas_verticales(expr, ventana=(-10, 10)):
+    """Detecta asíntotas verticales"""
+    asintotas = []
+    try:
+        expr_simplificada = expr.simplify()
+        num, den = expr_simplificada.as_numer_denom()
+        
+        try:
+            soluciones = solveset(den, x, domain=S.Reals)
+            for sol in soluciones:
+                try:
+                    val = float(sol.evalf())
+                    if ventana[0] < val < ventana[1]:
+                        # Verificar que sea asíntota real, no discontinuidad removible
+                        num_val = num.subs(x, sol)
+                        if abs(num_val) > 1e-10:
+                            asintotas.append(val)
+                except Exception:
+                    continue
+        except Exception:
+            pass
+    except Exception:
+        pass
+    
+    return sorted(list(set(asintotas)))
 
 # ------------------ muestreo lineal ------------------
 def _linspace(a: float, b: float, paso: float, max_puntos: int = 20000):
@@ -99,17 +166,6 @@ def _linspace(a: float, b: float, paso: float, max_puntos: int = 20000):
         xs.append(b)
     return xs
 
-def obtener_asintotas_verticales(expr):
-    # solo para expresiones racionales simples
-    try:
-        den = expr.as_numer_denom()[1]
-        soluciones = solveset(den, x, domain=S.Reals)
-        return [float(s.evalf()) for s in soluciones]
-    except Exception:
-        return []
-
-
-
 # ------------------ gráfico principal (contrato ok/detail) ------------------
 def grafico_funcion(
     texto_o_expr,
@@ -118,8 +174,6 @@ def grafico_funcion(
     paso=0.05,
     titulo=None,
     ax=None,
-    y_max = 1e4,
-    salto_max = 1e3
 ):
     # Validar ventana y paso
     try:
@@ -163,10 +217,14 @@ def grafico_funcion(
         ax.set_title(titulo or f"f(x) = {texto_funcion}")
     except Exception as e:
         return (False, f"No se pudo preparar los ejes/figura: {e}")
-    
-    asintotas = [v for v in obtener_asintotas_verticales(expr) if a < v < b]
-    for v in asintotas:
-        ax.axvline(v, color='red', linestyle='--', linewidth=1, alpha=0.7)
+
+    # Detectar y marcar asíntotas verticales
+    try:
+        asintotas = obtener_asintotas_verticales(expr, ventana=(a, b))
+        for v in asintotas:
+            ax.axvline(v, color='red', linestyle='--', linewidth=1, alpha=0.7)
+    except Exception:
+        pass
 
     # Muestreo y trazado
     try:
@@ -175,20 +233,21 @@ def grafico_funcion(
         prev_y = None
 
         def _flush_segment():
-            if seg_x:
+            if len(seg_x) > 1:  # Solo dibujar segmentos con al menos 2 puntos
                 try:
-                    ax.plot(seg_x, seg_y, "b", label="f(x)")
+                    ax.plot(seg_x, seg_y, "b", linewidth=1.5)
                 except Exception:
                     pass
             seg_x.clear()
             seg_y.clear()
-        
-        
+
         for t in xs:
-            y = evaluar_punto(expr, t, y_max=y_max)
+            y = evaluar_punto(expr, t)
             if y is not None:
-                if prev_y is not None and abs(y - prev_y) > salto_max:
+                # Detectar saltos grandes para manejar discontinuidades
+                if prev_y is not None and abs(y - prev_y) > 1000:
                     _flush_segment()
+                
                 seg_x.append(t)
                 seg_y.append(y)
                 prev_y = y
@@ -200,21 +259,28 @@ def grafico_funcion(
 
         # Marca de punto evaluado
         if valor_x is not None:
-            y_eval = evaluar_punto(expr, valor_x, y_max=y_max)
+            y_eval = evaluar_punto(expr, valor_x)
             if y_eval is not None:
-                ax.scatter([valor_x], [y_eval], color="red",
-                           label=f"f({valor_x}) = {y_eval:.4g}")
+                try:
+                    ax.scatter([valor_x], [y_eval], color="red", s=50, zorder=5,
+                               label=f"f({valor_x}) = {y_eval:.4g}")
+                except Exception:
+                    # no es bloqueante
+                    pass
 
-
+        try:
             handles, labels = ax.get_legend_handles_labels()
             if labels:
                 ax.legend(loc="best")
+        except Exception:
+            pass
 
     except Exception as e:
         if created_fig:
             try:
                 plt.close(fig)
-            except: pass
+            except Exception:
+                pass
         return (False, f"No se pudo trazar la función: {e}")
 
     return (True, None)

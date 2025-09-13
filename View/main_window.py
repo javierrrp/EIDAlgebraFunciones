@@ -69,7 +69,9 @@ class MainWindow(QMainWindow):
         results_title = QLabel("📊 Resultados")
         results_title.setObjectName("h2")
 
+
         self.domain_label = QLabel("Dominio: ...")
+        self.range_label = QLabel("Recorrido: ...")
         self.intercepts_label = QLabel("Intersecciones: ...")
         self.evaluation_label = QLabel("Evaluación: ...")
         self.error_label = QLabel()
@@ -160,6 +162,7 @@ class MainWindow(QMainWindow):
         left_layout.addSpacing(20)
         left_layout.addWidget(results_title)
         left_layout.addWidget(self.domain_label)
+        left_layout.addWidget(self.range_label)
         left_layout.addWidget(self.intercepts_label)
         left_layout.addWidget(self.evaluation_label)
 
