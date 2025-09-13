@@ -192,7 +192,7 @@ class MainWindow(QMainWindow):
         buttons_fila1_layout.addWidget(self.exp_button)
         buttons_fila1_layout.addWidget(self.parentesisopen_button)
         buttons_fila1_layout.addWidget(self.parentesisclose_button)
-        buttons_fila1_layout.addStretch() # Empuja los botones a la izquierda
+        
 
         buttons_fila2_layout.addWidget(self.plus_button)
         buttons_fila2_layout.addWidget(self.minus_button)
