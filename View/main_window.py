@@ -13,9 +13,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("EID Algebra")
         self.setWindowIcon(QIcon.fromTheme("applications-science"))
-        self.setGeometry(100, 100, 1200, 700)
-
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowMaximizeButtonHint)
+        self.setGeometry(100, 100, 950, 700)
 
         self.apply_styles()
 
@@ -72,7 +70,6 @@ class MainWindow(QMainWindow):
         results_title.setObjectName("h2")
 
         self.domain_label = QLabel("Dominio: ...")
-        self.range_label = QLabel("Recorrido: ...")
         self.intercepts_label = QLabel("Intersecciones: ...")
         self.evaluation_label = QLabel("Evaluación: ...")
         self.error_label = QLabel()
@@ -163,7 +160,6 @@ class MainWindow(QMainWindow):
         left_layout.addSpacing(20)
         left_layout.addWidget(results_title)
         left_layout.addWidget(self.domain_label)
-        left_layout.addWidget(self.range_label)
         left_layout.addWidget(self.intercepts_label)
         left_layout.addWidget(self.evaluation_label)
 
