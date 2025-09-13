@@ -77,7 +77,7 @@ def evaluar_punto(expresion, valor_x: float):
     except Exception:
         return None
 
-# ------------------ muestreo lineal sin NumPy ------------------
+# ------------------ muestreo lineal ------------------
 def _linspace(a: float, b: float, paso: float, max_puntos: int = 20000):
     if paso <= 0:
         raise ValueError("El paso debe ser positivo.")
