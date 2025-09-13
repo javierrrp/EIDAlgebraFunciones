@@ -2,6 +2,7 @@ from ast import expr
 import sympy as sp
 from sympy.calculus.util import continuous_domain
 from sympy.solvers import solveset
+from sympy import S, Union, FiniteSet, Interval, oo
 from Model import grafico
 
 
@@ -64,7 +65,33 @@ class Controller:
         self.view.function_input.setFocus()
 
 
-    
+    def _format_domain(self, domain):
+            """Convierte el objeto de dominio de sympy en un string legible."""
+
+            def format_endpoint(p):
+                if p == oo: return "∞"
+                if p == -oo: return "-∞"
+                return f"{float(p.evalf()):.3g}"
+
+            if domain == S.Reals:
+                return "Todos los reales (ℝ)"
+
+            if isinstance(domain, sp.Complement) and isinstance(domain.args[1], FiniteSet):
+                points = sorted([p.evalf() for p in domain.args[1]], key=float)
+                points_str = ", ".join([format_endpoint(p) for p in points])
+                return f"Todos los reales excepto x = {points_str}"
+
+            if isinstance(domain, Union):
+                parts = []
+                for interval in domain.args:
+                    if isinstance(interval, Interval):
+                        start = format_endpoint(interval.start)
+                        end = format_endpoint(interval.end)
+                        left_bracket = "[" if not interval.left_open else "("
+                        right_bracket = "]" if not interval.right_open else ")"
+                        parts.append(f"{left_bracket}{start}, {end}{right_bracket}")
+                return " U ".join(parts)
+            return str(domain)
 
     def generar_pasos(self, expr, valor_x):
         pasos = []
@@ -125,7 +152,8 @@ class Controller:
             x = sp.symbols('x')
 
             domain = continuous_domain(expr, x, sp.S.Reals)
-            self.view.domain_label.setText(f"<b>Dominio:</b> {sp.pretty(domain, use_unicode=True)}")
+            domain_str = self._format_domain(domain)
+            self.view.domain_label.setText(f"<b>Dominio:</b> {domain_str}")
 
             y_intercept_val = self.model.evaluar_punto(expr, 0)
             y_intercept_str = f"(0, {y_intercept_val:.4g})" if y_intercept_val is not None else "No existe"
@@ -134,7 +162,7 @@ class Controller:
             if x_intercepts.is_empty:
                 x_intercept_str = "No existe"
             else:
-                intercept_points = [f"({val.evalf():.4g}, 0)" for val in x_intercepts]
+                intercept_points = [f"({float(val.evalf()):.4g}, 0)" for val in x_intercepts]
                 x_intercept_str = ", ".join(intercept_points)
 
             self.view.intercepts_label.setText(f"<b>Intersección Eje Y:</b> {y_intercept_str}<br><b>Intersección Eje X:</b> {x_intercept_str}")
@@ -180,8 +208,11 @@ class Controller:
                     x_eval = None
             else:
                 self.view.evaluation_label.setText("<b>Evaluación:</b> Ingrese un valor para x.")
-
-            self.model.grafico_funcion(function_text, valor_x=x_eval, ax=self.view.ax)
+            
+            ok, mensaje = self.model.grafico_funcion(function_text, valor_x=x_eval, ax=self.view.ax)
+            if not ok:
+                self.view.error_label.setText(f"⚠️ Error al graficar: {mensaje}")
+            
             self.view.canvas.draw()
 
         except Exception as e:

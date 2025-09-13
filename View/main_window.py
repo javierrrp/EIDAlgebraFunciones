@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
 
 
         self.domain_label = QLabel("Dominio: ...")
+        self.domain_label.setWordWrap(True)
         self.range_label = QLabel("Recorrido: ...")
         self.intercepts_label = QLabel("Intersecciones: ...")
         self.evaluation_label = QLabel("Evaluación: ...")
