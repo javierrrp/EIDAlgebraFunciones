@@ -16,6 +16,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 950, 700)
 
         self.apply_styles()
+        
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -23,219 +24,126 @@ class MainWindow(QMainWindow):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(20)
 
-         # -------------------- PANEL IZQUIERDO --------------------
-        left_panel = QFrame()
-        left_panel.setObjectName("panel")
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(25, 25, 25, 25)
-        left_layout.setSpacing(15)
+        left_panel = self.create_left_panel()
+        right_panel = self.create_right_panel()
 
-        title_label = QLabel("⚡ Panel de Control")
-        title_label.setObjectName("h1")
+        main_layout.addWidget(left_panel, 1)
+        main_layout.addWidget(right_panel, 2)
 
+    def create_left_panel(self):
+        panel = QFrame()
+        panel.setObjectName("panel")
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setSpacing(15)
+
+        # Título
+        layout.addWidget(self._make_label("⚡ Panel de Control", "h1"))
+
+        # Función y entrada
         form_layout = QFormLayout()
-        form_layout.setSpacing(10)
-
-        # Entrada de función con "ƒ(x) ="
         fx_layout = QHBoxLayout()
-        fx_label = QLabel("ƒ(x) =")
-        fx_label.setObjectName("fxLabel")
+        fx_layout.addWidget(self._make_label("ƒ(x) =", "fxLabel"))
 
         self.function_input = QLineEdit()
         self.function_input.setPlaceholderText("Ej: (x**3 - 1) / (x - 1)")
         self.function_input.setObjectName("functionInput")
-        self.function_input.setMinimumHeight(80)  # Más alto
+        self.function_input.setMinimumHeight(80)
         self.function_input.setFont(QFont("Consolas", 158, QFont.Weight.Bold))
 
-        # Autocompletado para funciones
-        self.functions = ["sin", "cos", "tan", "log", "ln", "sqrt", "pi", "e"]
-        completer = QCompleter(self.functions)
+        # Autocompletar
+        completer = QCompleter(["sin", "cos", "tan", "log", "ln", "sqrt", "pi", "e"])
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.function_input.setCompleter(completer)
 
-        fx_layout.addWidget(fx_label)
         fx_layout.addWidget(self.function_input)
-
         self.x_value_input = QLineEdit()
         self.x_value_input.setPlaceholderText("Ej: 5")
 
         form_layout.addRow(fx_layout)
-        form_layout.addRow(QLabel("Evaluar en x:"), self.x_value_input)
+        form_layout.addRow("Evaluar en x:", self.x_value_input)
 
-        self.analyze_button = QPushButton("Analizar Función")
-        self.analyze_button.setIcon(QIcon.fromTheme("system-search"))
-        self.analyze_button.setIconSize(QSize(24, 24))
+        # Botones principales
+        self.analyze_button = self._make_button("Analizar Función", "system-search")
+        self.steptostep_button = self._make_button("Paso a Paso", "document-edit")
 
-        self.steptostep_button = QPushButton("Paso a Paso")
-        self.steptostep_button.setIcon(QIcon.fromTheme("document-edit"))
-        self.steptostep_button.setIconSize(QSize(24, 24))
-
-        results_title = QLabel("📊 Resultados")
-        results_title.setObjectName("h2")
-
+        # Resultados
+        layout.addLayout(form_layout)
+        layout.addWidget(self.analyze_button)
+        layout.addWidget(self.steptostep_button)
+        layout.addSpacing(20)
+        layout.addWidget(self._make_label("📊 Resultados", "h2"))
 
         self.domain_label = QLabel("Dominio: ...")
-        self.domain_label.setWordWrap(True)
         self.range_label = QLabel("Recorrido: ...")
         self.intercepts_label = QLabel("Intersecciones: ...")
         self.evaluation_label = QLabel("Evaluación: ...")
         self.error_label = QLabel()
         self.error_label.setObjectName("errorLabel")
 
+        for label in [self.domain_label, self.range_label, self.intercepts_label, self.evaluation_label]:
+            label.setWordWrap(True)
+            layout.addWidget(label)
+
+
         #Botones
 
-        # --- Botones de exponentes ---
-        self.x2_button = QPushButton("x\u00B2")
-        self.x2_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+        button_grid = [[("x²", "x2_button"), ("x³", "x3_button"), ("^", "exp_button"), ("(", "parentesisopen_button"), (")", "parentesisclose_button")],
+                    [("+", "plus_button"), ("-", "minus_button"), ("×", "multiply_button"), ("÷", "divide_button"), ("=", "equal_button")],
+                    [("√", "raiz_button"), ("x", "x_button"), ("π", "pi_button"), ("e", "e_button"), (".", "point_button")],
+                    [("sin", "sin_button"), ("cos", "cos_button"), ("tan", "tan_button"), ("log", "log_button"), ("ln", "ln_button")],
+                    [("C", "clear_button"), ("DEL", "del_button")]
+        ]
 
-        self.x3_button = QPushButton("x\u00B3")
-        self.x3_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+        for row in button_grid:
+            row_layout = QHBoxLayout()
+            for text, attr in row:
+                btn = QPushButton(text)
+                btn.setFixedSize(40 if len(text) <= 1 else 50, 40)
+                setattr(self, attr, btn)
+                row_layout.addWidget(btn)
+            layout.addLayout(row_layout)
 
-        self.exp_button = QPushButton("^")
-        self.exp_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+        # Botones de control
+        control_layout = QHBoxLayout()
+        self.clear_button = QPushButton("C")
+        self.del_button = QPushButton("DEL")
+        for btn in [self.clear_button, self.del_button]:
+            btn.setFixedSize(40, 40)
+            control_layout.addWidget(btn)
+        layout.addLayout(control_layout)
 
-        # --- Botones de parentesis --- 
-        self.parentesisopen_button = QPushButton("(")
-        self.parentesisopen_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+        layout.addStretch()
+        layout.addWidget(self.error_label)
 
-        self.parentesisclose_button = QPushButton(")")
-        self.parentesisclose_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
+        return panel
+    
+    def create_right_panel(self):
+        panel = QFrame()
+        panel.setObjectName("panel")
+        layout = QVBoxLayout(panel)
 
-        # --- Botones de operaciones básicas ---
-        self.plus_button = QPushButton("+")
-        self.plus_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
-
-        self.minus_button = QPushButton("-")
-        self.minus_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
-
-        self.multiply_button = QPushButton("×")
-        self.multiply_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
-
-        self.divide_button = QPushButton("÷")
-        self.divide_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
-
-        #--- Boton igual ---
-        self.equal_button = QPushButton("=")
-        self.equal_button.setFixedSize(40, 40)  # Ajusta según el tamaño necesario
-
-        # --- Raiz ---
-
-        self.raiz_button = QPushButton("√")
-        self.raiz_button.setFixedSize(40, 40)
-
-        # --- Variable principal 'x' ---
-        self.x_button = QPushButton("x")
-        self.x_button.setFixedSize(40, 40)
-
-        # --- Punto decimal ---
-        self.point_button = QPushButton(".")
-        self.point_button.setFixedSize(40, 40)
-
-        # --- Constantes Matemáticas ---
-        self.pi_button = QPushButton("π")
-        self.pi_button.setFixedSize(40, 40)
-        self.e_button = QPushButton("e")
-        self.e_button.setFixedSize(40, 40)
-
-        # --- Funciones Trigonométricas ---
-        self.sin_button = QPushButton("sin")
-        self.sin_button.setFixedSize(50, 40)
-        self.cos_button = QPushButton("cos")
-        self.cos_button.setFixedSize(50, 40)
-        self.tan_button = QPushButton("tan")
-        self.tan_button.setFixedSize(50, 40)
-
-        # --- Funciones Logarítmicas ---
-        self.log_button = QPushButton("log")  # Logaritmo base 10
-        self.log_button.setFixedSize(50, 40)
-        self.ln_button = QPushButton("ln")    # Logaritmo natural
-        self.ln_button.setFixedSize(50, 40)
-
-        # --- Botones de control ---
-        self.clear_button = QPushButton("C")  # Limpiar todo
-        self.clear_button.setFixedSize(40, 40)
-        self.del_button = QPushButton("DEL")  # Borrar último caracter
-        self.del_button.setFixedSize(40, 40)
-
-
-        
-        #Botones
-
-        left_layout.addWidget(title_label)
-        left_layout.addLayout(form_layout)
-        left_layout.addWidget(self.analyze_button)
-        left_layout.addWidget(self.steptostep_button)
-        left_layout.addSpacing(20)
-        left_layout.addWidget(results_title)
-        left_layout.addWidget(self.domain_label)
-        left_layout.addWidget(self.range_label)
-        left_layout.addWidget(self.intercepts_label)
-        left_layout.addWidget(self.evaluation_label)
-
-        
-
-        # --- Crear filas ---
-        buttons_fila1_layout = QHBoxLayout()
-        buttons_fila1_layout.setSpacing(10)
-
-        buttons_fila2_layout = QHBoxLayout()
-        buttons_fila2_layout.setSpacing(10)
-
-        buttons_fila3_layout = QHBoxLayout()
-        buttons_fila3_layout.setSpacing(10)
-
-        buttons_fila4_layout = QHBoxLayout()
-        buttons_fila4_layout.setSpacing(10)
-
-        # 2. Añadir los botones al layout horizontal
-        buttons_fila1_layout.addWidget(self.x2_button)
-        buttons_fila1_layout.addWidget(self.x3_button)
-        buttons_fila1_layout.addWidget(self.exp_button)
-        buttons_fila1_layout.addWidget(self.parentesisopen_button)
-        buttons_fila1_layout.addWidget(self.parentesisclose_button)
-        
-
-        buttons_fila2_layout.addWidget(self.plus_button)
-        buttons_fila2_layout.addWidget(self.minus_button)
-        buttons_fila2_layout.addWidget(self.multiply_button)
-        buttons_fila2_layout.addWidget(self.divide_button)
-        buttons_fila2_layout.addWidget(self.equal_button)
-
-
-        buttons_fila3_layout.addWidget(self.raiz_button)
-        buttons_fila3_layout.addWidget(self.x_button)
-        buttons_fila3_layout.addWidget(self.pi_button)
-        buttons_fila3_layout.addWidget(self.e_button)
-        buttons_fila3_layout.addWidget(self.point_button)
-        
-        buttons_fila4_layout.addWidget(self.sin_button)
-        buttons_fila4_layout.addWidget(self.cos_button)
-        buttons_fila4_layout.addWidget(self.tan_button)
-        buttons_fila4_layout.addWidget(self.log_button)
-        buttons_fila4_layout.addWidget(self.ln_button)
-
-
-        # 3. Añadir el layout de botones al layout vertical principal
-        left_layout.addLayout(buttons_fila1_layout)
-        left_layout.addLayout(buttons_fila2_layout)
-        left_layout.addLayout(buttons_fila3_layout)
-        left_layout.addLayout(buttons_fila4_layout)
-
-        left_layout.addStretch()
-        left_layout.addWidget(self.error_label)
-
-        right_panel = QFrame()
-        right_panel.setObjectName("panel")
-        right_layout = QVBoxLayout(right_panel)
-                
         self.figure = Figure(figsize=(5, 3), dpi=100)
         self.canvas = FigureCanvas(self.figure)
         self.ax = self.figure.add_subplot(111)
         self.ax.grid(True, linestyle='--', alpha=0.6)
-        right_layout.addWidget(self.canvas)
 
-        main_layout.addWidget(left_panel, 1)
-        main_layout.addWidget(right_panel, 2)
+        layout.addWidget(self.canvas)
+        return panel
+
+    def _make_button(self, text, icon_name=None):
+        btn = QPushButton(text)
+        if icon_name:
+            btn.setIcon(QIcon.fromTheme(icon_name))
+            btn.setIconSize(QSize(24, 24))
+        return btn
+
+    def _make_label(self, text, obj_name=None):
+        label = QLabel(text)
+        if obj_name:
+            label.setObjectName(obj_name)
+        return label
+
         
     def apply_styles(self):
         BG_COLOR = "#1e1e2f"

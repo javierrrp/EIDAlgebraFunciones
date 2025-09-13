@@ -24,20 +24,17 @@ def _zoom_simple(ax):
              "xlim": None, "ylim": None}
 
     def on_scroll(e):
-        if e.inaxes != ax or e.xdata is None or e.ydata is None: return
-        f = 1/1.2 if e.button == "up" else 1.2
-        x0, x1 = ax.get_xlim(); y0, y1 = ax.get_ylim()
-        cx, cy = e.xdata, e.ydata
-        ax.set_xlim(cx - (cx - x0)*f, cx + (x1 - cx)*f)
-        ax.set_ylim(cy - (cy - y0)*f, cy + (y1 - cy)*f)
-        fig.canvas.draw_idle()
+        if e.inaxes == ax and e.xdata:
+            f = 1/1.2 if e.button == "up" else 1.2
+            x0, x1 = ax.get_xlim(); y0, y1 = ax.get_ylim()
+            ax.set_xlim(e.xdata - (e.xdata - x0)*f, e.xdata + (x1 - e.xdata)*f)
+            ax.set_ylim(e.ydata - (e.ydata - y0)*f, e.ydata + (y1 - e.ydata)*f)
+            fig.canvas.draw_idle()
 
     def on_press(e):
-        if e.inaxes == ax and e.button == 1 and e.xdata is not None:
-            state["drag"] = True
-            state["x0"], state["y0"] = e.xdata, e.ydata
-            state["xlim"], state["ylim"] = ax.get_xlim(), ax.get_ylim()
-
+        if e.inaxes == ax and e.button == 1 and e.xdata:
+            state.update({"drag": True, "x0": e.xdata, "y0": e.ydata, "xlim": ax.get_xlim(), "ylim": ax.get_ylim()})
+    
     def on_move(e):
         if not state["drag"] or e.inaxes != ax or e.xdata is None: return
         dx, dy = e.xdata - state["x0"], e.ydata - state["y0"]
@@ -54,28 +51,15 @@ def _zoom_simple(ax):
             ax.set_ylim(*state["ylim0"])
             fig.canvas.draw_idle()
 
-    fig.canvas.mpl_connect("scroll_event", on_scroll)
-    fig.canvas.mpl_connect("button_press_event", on_press)
-    fig.canvas.mpl_connect("motion_notify_event", on_move)
-    fig.canvas.mpl_connect("button_release_event", on_release)
-    fig.canvas.mpl_connect("button_press_event", on_dbl)
+    for event, func in [("scroll_event", on_scroll), ("button_press_event", on_press), ("motion_notify_event", on_move), ("button_release_event", on_release), ("button_press_event", on_dbl)]:
+        fig.canvas.mpl_connect(event, func)
 
 # ------------------ normalización de texto del usuario ------------------
 def _normalizar_texto(s: str) -> str:
-    s = s.strip()
-    s = (
-        s.replace("×", "*")
-         .replace("÷", "/")
-         .replace("π", "pi")
-         .replace("√", "sqrt")
-         .replace(",", ".")  # coma decimal -> punto
-    )
-    # corrige sqrt9 -> sqrt(9), sqrtx -> sqrt(x)
+    s = s.strip().replace("×", "*").replace("÷", "/").replace("π", "pi").replace("√", "sqrt").replace(",", ".")
     s = re.sub(r"sqrt\s*([A-Za-z0-9\(])", r"sqrt(\1", s)
-    # balanceo mínimo de paréntesis (cierra los que falten)
-    if s.count("(") > s.count(")"):
-        s += ")" * (s.count("(") - s.count(")"))
-    return s
+    return s + ")" * (s.count("(") - s.count(")")) if s.count("(") > s.count(")") else s
+
 
 # ------------------ convertidor en objeto matematico ---------------------
 def analizar_funcion(texto_funcion: str):
