@@ -29,14 +29,9 @@ class PasoAPasoDialog(QDialog):
         steps_scroll.setWidgetResizable(True)
         steps_scroll.setObjectName("stepsScroll")
 
-        # Botón cerrar
-        self.close_button = QPushButton("Cerrar")
-        self.close_button.clicked.connect(self.close)
-
         # Agregar widgets al layout
         layout.addWidget(title_label)
         layout.addWidget(steps_scroll)
-        layout.addWidget(self.close_button)
 
         self.setLayout(layout)
         

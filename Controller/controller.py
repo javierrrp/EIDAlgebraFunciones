@@ -1,7 +1,20 @@
+from ast import expr
 import sympy as sp
 from sympy.calculus.util import continuous_domain
 from sympy.solvers import solveset
 from Model import grafico
+
+
+def conversion_numeros(val):
+        try:
+            val_eval = sp.N(val)
+            if val_eval == int(val_eval):
+                return str(int(val_eval))
+            else:
+                return f"{float(val_eval):.4f}".rstrip('0').rstrip('.')
+        except Exception:
+            return str(val)
+
 
 class Controller:
     def __init__(self, view):
@@ -51,28 +64,31 @@ class Controller:
         self.view.function_input.setFocus()
 
 
+    
+
     def generar_pasos(self, expr, valor_x):
         pasos = []
         x = sp.symbols('x')
 
+        # Paso 1: Mostrar la función ingresada
         pasos.append(f"Función ingresada: f(x) = {expr}")
 
-        # Paso 1: Sustituir x
-        expr_subs = expr.subs(x, valor_x)
-        pasos.append(f"Sustituyendo x = {valor_x}: {expr_subs}")
+        # Paso 2: Sustituir x en la expresión como string (sin simplificar aún)
+        expr_str = str(expr)
+        expr_sust_str = expr_str.replace("x", f"({conversion_numeros(valor_x)})")
+        pasos.append(f"Sustituimos x = {conversion_numeros(valor_x)}: {expr_sust_str}")
 
-        # Paso 2: Si es racional, mostrar numerador y denominador
-        numer, denom = expr_subs.as_numer_denom()
-        if denom != 1:
-            pasos.append(f"Numerador: {numer}")
-            pasos.append(f"Denominador: {denom}")
-            pasos.append(f"División: {numer} / {denom} = {numer/denom}")
+        # Paso 3: Calcular paso a paso usando sympy para simplificar
+        expr_calc = sp.sympify(expr_sust_str)
+        if expr_calc != sp.sympify(expr_str):
+            pasos.append(f"Calculamos: {conversion_numeros(expr_calc)}")
 
-        # Paso 3: Evaluación final
-        resultado = expr_subs.evalf()
-        pasos.append(f"Resultado final: f({valor_x}) = {resultado}")
+        # Paso 4: Resultado final
+        resultado = expr.subs(x, valor_x).evalf()
+        pasos.append(f"Resultado final: f({conversion_numeros(valor_x)}) = {conversion_numeros(resultado)}")
 
         return pasos
+
 
     def show_step_by_step(self):
         function_text = self.view.function_input.text()

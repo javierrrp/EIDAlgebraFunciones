@@ -98,51 +98,45 @@ def evaluar_punto_con_pasos(expresion, valor_x: float):
         pasos.append(f"f(x) = {funcion_str}")
         
         # Paso 2: Sustitución
-        pasos.append(f"f({valor_x}) = {funcion_str.replace('x', f'({valor_x})')}")
-        
-        # Paso 3: Mostrar sustitución con SymPy
-        expr_sustituida = expresion.subs(x, valor_x)
-        pasos.append(f"f({valor_x}) = {str(expr_sustituida)}")
-        
-        # Paso 4: Resultado final
-        resultado = expr_sustituida.evalf()
-        resultado_float = _to_real_float(resultado)
-        
-        if resultado_float is not None:
-            pasos.append(f"f({valor_x}) = {resultado_float:.6g}")
+        # Manejar la representación del valor según si es entero o decimal
+        if valor_x == int(valor_x):
+            # Si es un número entero (como 3.0), mostrarlo sin decimales
+            valor_str = str(int(valor_x))
         else:
-            pasos.append("Resultado: No definido en los reales")
+            # Si es decimal (como 2.5), mostrarlo con decimales
+            valor_str = f"{valor_x: .3f}".rstrip('0').rstrip('.')
         
-        return resultado_float, "\n".join(pasos)
-        
-    except Exception as e:
-        pasos.append(f"Error: {str(e)}")
-        return None, "\n".join(pasos)
+        valor_reemplazo = f'({valor_str})'
+        funcion_con_sustitucion = re.sub(r'\bx\b', valor_reemplazo, funcion_str)
+        pasos.append(f"f({valor_x}) = {funcion_con_sustitucion}")
     
-
-def evaluar_punto_con_pasos(expresion, valor_x: float):
-    """
-    Evalúa una expresión en un punto y muestra el paso a paso de la sustitución
-    Retorna: (resultado_float, pasos_texto)
-    """
-    pasos = []
     
-    try:
-        # Paso 1: Función original
-        funcion_str = str(expresion)
-        pasos.append(f"f(x) = {funcion_str}")
-        
-        # Paso 2: Sustitución
-        pasos.append(f"f({valor_x}) = {funcion_str.replace('x', f'({valor_x})')}")
         
         # Paso 3: Mostrar sustitución con SymPy
         expr_sustituida = expresion.subs(x, valor_x)
-        pasos.append(f"f({valor_x}) = {str(expr_sustituida)}")
+        if expr_sustituida == int(expr_sustituida):
+            # Si es un número entero (e.g., 5.0), lo convertimos a int (5)
+            sustitucion_str = str(int(expr_sustituida))
+        else:
+            # Si no es un entero, lo formateamos para mostrar decimales
+            sustitucion_str = f"{expr_sustituida:.3f}"
+        pasos.append(f"Sustituyendo x = {valor_x}: {sustitucion_str}")
         
         # Paso 4: Resultado final
-        resultado = expr_sustituida.evalf()
-        resultado_float = _to_real_float(resultado)
+        resultado = expresion.subs(x, valor_x).evalf()
         
+
+        try:
+            if hasattr(resultado, 'is_real') and resultado.is_real == False:
+                resultado_float = None
+            elif hasattr(resultado, 'is_finite') and resultado.is_finite == False:
+                resultado_float = None
+            else:
+                resultado_float = float(resultado)
+        except (ValueError, TypeError, AttributeError):
+            resultado_float = None
+
+            
         if resultado_float is not None:
             pasos.append(f"f({valor_x}) = {resultado_float:.6g}")
         else:
