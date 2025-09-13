@@ -16,6 +16,49 @@ TRANSFORMACIONES = tuple(standard_transformations) + (
     implicit_multiplication_application,  # 2x -> 2*x
     convert_xor,                          # ^ -> **
 )
+# ------------------ zoom mínimo ---------------------------------
+def _zoom_simple(ax):
+    fig = ax.figure
+    state = {"drag": False, "x0": None, "y0": None,
+             "xlim0": ax.get_xlim(), "ylim0": ax.get_ylim(),
+             "xlim": None, "ylim": None}
+
+    def on_scroll(e):
+        if e.inaxes != ax or e.xdata is None or e.ydata is None: return
+        f = 1/1.2 if e.button == "up" else 1.2
+        x0, x1 = ax.get_xlim(); y0, y1 = ax.get_ylim()
+        cx, cy = e.xdata, e.ydata
+        ax.set_xlim(cx - (cx - x0)*f, cx + (x1 - cx)*f)
+        ax.set_ylim(cy - (cy - y0)*f, cy + (y1 - cy)*f)
+        fig.canvas.draw_idle()
+
+    def on_press(e):
+        if e.inaxes == ax and e.button == 1 and e.xdata is not None:
+            state["drag"] = True
+            state["x0"], state["y0"] = e.xdata, e.ydata
+            state["xlim"], state["ylim"] = ax.get_xlim(), ax.get_ylim()
+
+    def on_move(e):
+        if not state["drag"] or e.inaxes != ax or e.xdata is None: return
+        dx, dy = e.xdata - state["x0"], e.ydata - state["y0"]
+        x0, x1 = state["xlim"]; y0, y1 = state["ylim"]
+        ax.set_xlim(x0 - dx, x1 - dx)
+        ax.set_ylim(y0 - dy, y1 - dy)
+        fig.canvas.draw_idle()
+
+    def on_release(e): state["drag"] = False
+
+    def on_dbl(e):
+        if e.inaxes == ax and e.dblclick:
+            ax.set_xlim(*state["xlim0"])
+            ax.set_ylim(*state["ylim0"])
+            fig.canvas.draw_idle()
+
+    fig.canvas.mpl_connect("scroll_event", on_scroll)
+    fig.canvas.mpl_connect("button_press_event", on_press)
+    fig.canvas.mpl_connect("motion_notify_event", on_move)
+    fig.canvas.mpl_connect("button_release_event", on_release)
+    fig.canvas.mpl_connect("button_press_event", on_dbl)
 
 # ------------------ normalización de texto del usuario ------------------
 def _normalizar_texto(s: str) -> str:
@@ -348,5 +391,10 @@ def grafico_funcion(
             except Exception:
                 pass
         return (False, f"No se pudo trazar la función: {e}")
+# ----------------- activa interaccion de zoom -----------------------
+    try:
+        _zoom_simple(ax)
+    except Exception:
+        pass
 
     return (True, None)
