@@ -77,7 +77,7 @@ def _normalizar_texto(s: str) -> str:
         s += ")" * (s.count("(") - s.count(")"))
     return s
 
-# ------------------ convertidor en objeto matematico ------------------
+# ------------------ convertidor en objeto matematico ---------------------
 def analizar_funcion(texto_funcion: str):
     if not texto_funcion or not str(texto_funcion).strip():
         raise SympifyError("Entrada vacía.")
