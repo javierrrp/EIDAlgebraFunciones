@@ -1,7 +1,7 @@
 import math
 import re
 import matplotlib.pyplot as plt
-from sympy import symbols, sin, cos, tan, log, sqrt, pi, E
+from sympy import symbols, sin, cos, tan, log, sqrt, pi, solveset, E, S
 from sympy.core.sympify import SympifyError
 from sympy.parsing.sympy_parser import (
     parse_expr,
@@ -51,7 +51,7 @@ def analizar_funcion(texto_funcion: str):
             texto,
             transformations=TRANSFORMACIONES,
             local_dict=locales,
-            evaluate=True,
+            evaluate=False,
         )
         return expr
     except Exception as e:
@@ -59,21 +59,23 @@ def analizar_funcion(texto_funcion: str):
         raise SympifyError(str(e))
 
 # ------------------ helpers evaluación ------------------
-def _to_real_float(val):
+def _to_real_float(val, y_max = 1e4):
     try:
         if hasattr(val, "is_real") and val.is_real is False:
             return None
         vf = float(val.evalf())
         if not math.isfinite(vf):
             return None
+        if abs(vf) > y_max:
+            return None
         return vf
     except Exception:
         return None
 # ----------------- evalua expresion, devuelve float o none si no es valido en R ----------------
-def evaluar_punto(expresion, valor_x: float):
+def evaluar_punto(expresion, valor_x: float, y_max=1e4):
     try:
         y = expresion.subs(x, valor_x)
-        return _to_real_float(y)
+        return _to_real_float(y, y_max=y_max)
     except Exception:
         return None
 
@@ -97,6 +99,17 @@ def _linspace(a: float, b: float, paso: float, max_puntos: int = 20000):
         xs.append(b)
     return xs
 
+def obtener_asintotas_verticales(expr):
+    # solo para expresiones racionales simples
+    try:
+        den = expr.as_numer_denom()[1]
+        soluciones = solveset(den, x, domain=S.Reals)
+        return [float(s.evalf()) for s in soluciones]
+    except Exception:
+        return []
+
+
+
 # ------------------ gráfico principal (contrato ok/detail) ------------------
 def grafico_funcion(
     texto_o_expr,
@@ -105,6 +118,8 @@ def grafico_funcion(
     paso=0.05,
     titulo=None,
     ax=None,
+    y_max = 1e4,
+    salto_max = 1e3
 ):
     # Validar ventana y paso
     try:
@@ -148,11 +163,16 @@ def grafico_funcion(
         ax.set_title(titulo or f"f(x) = {texto_funcion}")
     except Exception as e:
         return (False, f"No se pudo preparar los ejes/figura: {e}")
+    
+    asintotas = [v for v in obtener_asintotas_verticales(expr) if a < v < b]
+    for v in asintotas:
+        ax.axvline(v, color='red', linestyle='--', linewidth=1, alpha=0.7)
 
     # Muestreo y trazado
     try:
         xs = _linspace(a, b, paso)
         seg_x, seg_y = [], []
+        prev_y = None
 
         def _flush_segment():
             if seg_x:
@@ -162,41 +182,39 @@ def grafico_funcion(
                     pass
             seg_x.clear()
             seg_y.clear()
-
+        
+        
         for t in xs:
-            y = evaluar_punto(expr, t)
+            y = evaluar_punto(expr, t, y_max=y_max)
             if y is not None:
+                if prev_y is not None and abs(y - prev_y) > salto_max:
+                    _flush_segment()
                 seg_x.append(t)
                 seg_y.append(y)
+                prev_y = y
             else:
                 _flush_segment()
+                prev_y = None
 
         _flush_segment()
 
         # Marca de punto evaluado
         if valor_x is not None:
-            y_eval = evaluar_punto(expr, valor_x)
+            y_eval = evaluar_punto(expr, valor_x, y_max=y_max)
             if y_eval is not None:
-                try:
-                    ax.scatter([valor_x], [y_eval], color="red",
-                               label=f"f({valor_x}) = {y_eval:.4g}")
-                except Exception:
-                    # no es bloqueante
-                    pass
+                ax.scatter([valor_x], [y_eval], color="red",
+                           label=f"f({valor_x}) = {y_eval:.4g}")
 
-        try:
+
             handles, labels = ax.get_legend_handles_labels()
             if labels:
                 ax.legend(loc="best")
-        except Exception:
-            pass
 
     except Exception as e:
         if created_fig:
             try:
                 plt.close(fig)
-            except Exception:
-                pass
+            except: pass
         return (False, f"No se pudo trazar la función: {e}")
 
     return (True, None)
