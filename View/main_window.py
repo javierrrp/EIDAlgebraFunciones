@@ -66,6 +66,10 @@ class MainWindow(QMainWindow):
         self.analyze_button.setIcon(QIcon.fromTheme("system-search"))
         self.analyze_button.setIconSize(QSize(24, 24))
 
+        self.steptostep_button = QPushButton("Paso a Paso")
+        self.steptostep_button.setIcon(QIcon.fromTheme("document-edit"))
+        self.steptostep_button.setIconSize(QSize(24, 24))
+
         results_title = QLabel("📊 Resultados")
         results_title.setObjectName("h2")
 
@@ -159,6 +163,7 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(title_label)
         left_layout.addLayout(form_layout)
         left_layout.addWidget(self.analyze_button)
+        left_layout.addWidget(self.steptostep_button)
         left_layout.addSpacing(20)
         left_layout.addWidget(results_title)
         left_layout.addWidget(self.domain_label)

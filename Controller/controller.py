@@ -8,9 +8,11 @@ class Controller:
         self.view = view
         self.model = grafico
         self._connect_signals()
+        
 
     def _connect_signals(self):
         self.view.analyze_button.clicked.connect(self.run_analysis)
+
 
         buttons = {
             self.view.x2_button: '**2',
@@ -39,6 +41,8 @@ class Controller:
         
         self.view.clear_button.clicked.connect(self.view.function_input.clear)
         self.view.del_button.clicked.connect(self.view.function_input.backspace)
+        self.view.steptostep_button.clicked.connect(self.show_step_by_step)
+
 
     def _insert_text_at_cursor(self, text):
         self.view.function_input.insert(text)
@@ -46,6 +50,51 @@ class Controller:
             self.view.function_input.cursorBackward(False, 1)
         self.view.function_input.setFocus()
 
+
+    def generar_pasos(self, expr, valor_x):
+        pasos = []
+        x = sp.symbols('x')
+
+        pasos.append(f"Función ingresada: f(x) = {expr}")
+
+        # Paso 1: Sustituir x
+        expr_subs = expr.subs(x, valor_x)
+        pasos.append(f"Sustituyendo x = {valor_x}: {expr_subs}")
+
+        # Paso 2: Si es racional, mostrar numerador y denominador
+        numer, denom = expr_subs.as_numer_denom()
+        if denom != 1:
+            pasos.append(f"Numerador: {numer}")
+            pasos.append(f"Denominador: {denom}")
+            pasos.append(f"División: {numer} / {denom} = {numer/denom}")
+
+        # Paso 3: Evaluación final
+        resultado = expr_subs.evalf()
+        pasos.append(f"Resultado final: f({valor_x}) = {resultado}")
+
+        return pasos
+
+    def show_step_by_step(self):
+        function_text = self.view.function_input.text()
+        x_text = self.view.x_value_input.text()
+        if not function_text or not x_text:
+            self.view.error_label.setText("⚠️ Ingresa la función y un valor de x.")
+            return
+
+        try:
+            expr = self.model.analizar_funcion(function_text)
+            valor_x = float(sp.sympify(x_text).evalf())
+        except Exception:
+            self.view.error_label.setText("⚠️ Valor de x inválido.")
+            return
+
+        pasos = self.generar_pasos(expr, valor_x)
+        
+        from View.paso_a_paso import PasoAPasoDialog
+        dialog = PasoAPasoDialog(pasos, parent=self.view)
+        dialog.exec()
+    
+    
     def run_analysis(self):
         self.view.error_label.setText("")
         function_text = self.view.function_input.text()

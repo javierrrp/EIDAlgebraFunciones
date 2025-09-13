@@ -84,6 +84,76 @@ def _to_real_float(val):
     except Exception:
         return None
 
+# ----------------- evalua expresion con pasos de sustitucion ----------------
+def evaluar_punto_con_pasos(expresion, valor_x: float):
+    """
+    Evalúa una expresión en un punto y muestra el paso a paso de la sustitución
+    Retorna: (resultado_float, pasos_texto)
+    """
+    pasos = []
+    
+    try:
+        # Paso 1: Función original
+        funcion_str = str(expresion)
+        pasos.append(f"f(x) = {funcion_str}")
+        
+        # Paso 2: Sustitución
+        pasos.append(f"f({valor_x}) = {funcion_str.replace('x', f'({valor_x})')}")
+        
+        # Paso 3: Mostrar sustitución con SymPy
+        expr_sustituida = expresion.subs(x, valor_x)
+        pasos.append(f"f({valor_x}) = {str(expr_sustituida)}")
+        
+        # Paso 4: Resultado final
+        resultado = expr_sustituida.evalf()
+        resultado_float = _to_real_float(resultado)
+        
+        if resultado_float is not None:
+            pasos.append(f"f({valor_x}) = {resultado_float:.6g}")
+        else:
+            pasos.append("Resultado: No definido en los reales")
+        
+        return resultado_float, "\n".join(pasos)
+        
+    except Exception as e:
+        pasos.append(f"Error: {str(e)}")
+        return None, "\n".join(pasos)
+    
+
+def evaluar_punto_con_pasos(expresion, valor_x: float):
+    """
+    Evalúa una expresión en un punto y muestra el paso a paso de la sustitución
+    Retorna: (resultado_float, pasos_texto)
+    """
+    pasos = []
+    
+    try:
+        # Paso 1: Función original
+        funcion_str = str(expresion)
+        pasos.append(f"f(x) = {funcion_str}")
+        
+        # Paso 2: Sustitución
+        pasos.append(f"f({valor_x}) = {funcion_str.replace('x', f'({valor_x})')}")
+        
+        # Paso 3: Mostrar sustitución con SymPy
+        expr_sustituida = expresion.subs(x, valor_x)
+        pasos.append(f"f({valor_x}) = {str(expr_sustituida)}")
+        
+        # Paso 4: Resultado final
+        resultado = expr_sustituida.evalf()
+        resultado_float = _to_real_float(resultado)
+        
+        if resultado_float is not None:
+            pasos.append(f"f({valor_x}) = {resultado_float:.6g}")
+        else:
+            pasos.append("Resultado: No definido en los reales")
+        
+        return resultado_float, "\n".join(pasos)
+        
+    except Exception as e:
+        pasos.append(f"Error: {str(e)}")
+        return None, "\n".join(pasos)
+
 # ----------------- evalua expresion, devuelve float o none si no es valido en R ----------------
 def evaluar_punto(expresion, valor_x: float):
     try:
@@ -119,6 +189,8 @@ def evaluar_punto(expresion, valor_x: float):
         if any(keyword in error_str for keyword in ["format", "zero._format", "sympify", "nan"]):
             return None
         return None
+    
+    
 
 def obtener_asintotas_verticales(expr, ventana=(-10, 10)):
     """Detecta asíntotas verticales"""
