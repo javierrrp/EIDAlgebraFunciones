@@ -79,31 +79,25 @@ def _normalizar_texto(s: str) -> str:
 
 # ------------------ convertidor en objeto matematico ------------------
 def analizar_funcion(texto_funcion: str):
-    locales = {
-        "x": x,
-        # trigonométricas
-        "sin": sin, "cos": cos, "tan": tan,
-        # log/raíz
-        "log": log, "ln": log, "sqrt": sqrt,
-        # constantes
-        "pi": pi, "e": E, "E": E,
-    }
+    if not texto_funcion or not str(texto_funcion).strip():
+        raise SympifyError("Entrada vacía.")
+    texto_funcion = str(texto_funcion).strip()
+    if any(c in texto_funcion for c in [";", "{", "}", "[", "]"]):
+        raise SympifyError("Caracteres no permitidos en la expresión.")
+
+    locales = {"x": x, "sin": sin, "cos": cos, "tan": tan,
+               "log": log, "ln": log, "sqrt": sqrt, "pi": pi, "e": E, "E": E}
     try:
         texto = _normalizar_texto(texto_funcion)
         try:
-            expr = parse_expr(
-                texto,
-                transformations=TRANSFORMACIONES,
-                local_dict=locales,
-                evaluate=False,  # Cambiado a False para mejor control
-            )
+            return parse_expr(texto, transformations=TRANSFORMACIONES,
+                              local_dict=locales, evaluate=False)
         except Exception:
-            # Fallback con sympify
-            expr = sympify(texto, locals=locales, evaluate=False)
-        return expr
+            return sympify(texto, locals=locales, evaluate=False)
+    except SympifyError:
+        raise
     except Exception as e:
-        # El Controller captura SympifyError como "Error de sintaxis"
-        raise SympifyError(str(e))
+        raise SympifyError(f"Error de sintaxis: {e}")
 
 # ------------------ helpers evaluación ------------------
 def _to_real_float(val):
@@ -228,32 +222,29 @@ def evaluar_punto(expresion, valor_x: float):
         return None
     
     
-
+# -----------------------------------------------------------------------
 def obtener_asintotas_verticales(expr, ventana=(-10, 10)):
-    """Detecta asíntotas verticales"""
     asintotas = []
     try:
         expr_simplificada = expr.simplify()
         num, den = expr_simplificada.as_numer_denom()
-        
-        try:
-            soluciones = solveset(den, x, domain=S.Reals)
-            for sol in soluciones:
-                try:
-                    val = float(sol.evalf())
-                    if ventana[0] < val < ventana[1]:
-                        # Verificar que sea asíntota real, no discontinuidad removible
-                        num_val = num.subs(x, sol)
-                        if abs(num_val) > 1e-10:
-                            asintotas.append(val)
-                except Exception:
-                    continue
-        except Exception:
-            pass
+        soluciones = solveset(den, x, domain=S.Reals)
+
+        # Si no es conjunto finito (intervalos/infinitos), no dibujar
+        if hasattr(soluciones, "is_FiniteSet") and not soluciones.is_FiniteSet:
+            return []
+
+        for sol in soluciones:
+            try:
+                val = float(sol.evalf())
+                if ventana[0] < val < ventana[1]:
+                    if abs(num.subs(x, sol)) > 1e-10:
+                        asintotas.append(val)
+            except Exception:
+                continue
     except Exception:
         pass
-    
-    return sorted(list(set(asintotas)))
+    return sorted(set(asintotas))
 
 # ------------------ muestreo lineal ------------------
 def _linspace(a: float, b: float, paso: float, max_puntos: int = 20000):
@@ -292,6 +283,10 @@ def grafico_funcion(
             return (False, "Ventana inválida: se requiere a < b.")
         if paso <= 0:
             return (False, "El paso debe ser positivo.")
+        if (b - a) > 1e6:
+            return (False, "La ventana es demasiado grande.")
+        if paso < 1e-9:
+            return (False, "El paso es demasiado pequeño.")
     except Exception as e:
         return (False, f"Parámetros de ventana/paso inválidos: {e}")
 
@@ -392,6 +387,8 @@ def grafico_funcion(
                 pass
         return (False, f"No se pudo trazar la función: {e}")
 # ----------------- activa interaccion de zoom -----------------------
+    if not ax.has_data():
+        return (False, "No hay valores reales en la ventana seleccionada.")
     try:
         _zoom_simple(ax)
     except Exception:
