@@ -47,7 +47,17 @@ class Controller:
             self.view.cos_button: 'cos()',
             self.view.tan_button: 'tan()',
             self.view.log_button: 'log()',
-            self.view.ln_button: 'ln()'
+            self.view.ln_button: 'ln()' ,
+            self.view.button_1: '1',
+            self.view.button_2: '2',
+            self.view.button_3: '3',
+            self.view.button_4: '4',
+            self.view.button_5: '5',
+            self.view.button_6: '6',
+            self.view.button_7: '7',
+            self.view.button_8: '8',
+            self.view.button_9: '9',
+            self.view.button_0: '0',
         }
 
         for btn, text in buttons.items():

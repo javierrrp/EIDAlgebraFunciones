@@ -363,6 +363,8 @@ def grafico_funcion(
         except Exception:
             pass
 
+    
+
     except Exception as e:
         if created_fig:
             try:

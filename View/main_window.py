@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QLabel, QFormLayout,
-                             QFrame, QCompleter)
+                             QFrame, QCompleter, QSizePolicy)
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt6.QtGui import QIcon, QFont
@@ -13,7 +13,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("EID Algebra")
         self.setWindowIcon(QIcon.fromTheme("applications-science"))
-        self.setGeometry(100, 100, 950, 700)
+        self.setGeometry(100, 100, 950, 500)
 
         self.apply_styles()
         
@@ -40,38 +40,38 @@ class MainWindow(QMainWindow):
         # Título
         layout.addWidget(self._make_label("⚡ Panel de Control", "h1"))
 
-        # Función y entrada
+        # Sección de entrada (Formulario)
         form_layout = QFormLayout()
-        fx_layout = QHBoxLayout()
-        fx_layout.addWidget(self._make_label("ƒ(x) =", "fxLabel"))
 
         self.function_input = QLineEdit()
         self.function_input.setPlaceholderText("Ej: (x**3 - 1) / (x - 1)")
         self.function_input.setObjectName("functionInput")
-        self.function_input.setMinimumHeight(80)
-        self.function_input.setFont(QFont("Consolas", 158, QFont.Weight.Bold))
+        self.function_input.setMinimumHeight(50)
+        self.function_input.setFont(QFont("Consolas", 15, QFont.Weight.Bold))
+        self.function_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-        # Autocompletar
         completer = QCompleter(["sin", "cos", "tan", "log", "ln", "sqrt", "pi", "e"])
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.function_input.setCompleter(completer)
+        
+        form_layout.addRow(self._make_label("ƒ(x) =", "fxLabel"), self.function_input)
 
-        fx_layout.addWidget(self.function_input)
         self.x_value_input = QLineEdit()
         self.x_value_input.setPlaceholderText("Ej: 5")
+        self.x_value_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-        form_layout.addRow(fx_layout)
         form_layout.addRow("Evaluar en x:", self.x_value_input)
-
-        # Botones principales
+        layout.addLayout(form_layout)
+        
+        # Botones principales (Analizar y Paso a Paso)
         self.analyze_button = self._make_button("Analizar Función", "system-search")
         self.steptostep_button = self._make_button("Paso a Paso", "document-edit")
-
-        # Resultados
-        layout.addLayout(form_layout)
+        
         layout.addWidget(self.analyze_button)
         layout.addWidget(self.steptostep_button)
         layout.addSpacing(20)
+        
+        # Sección de resultados
         layout.addWidget(self._make_label("📊 Resultados", "h2"))
 
         self.domain_label = QLabel("Dominio: ...")
@@ -84,36 +84,38 @@ class MainWindow(QMainWindow):
         for label in [self.domain_label, self.range_label, self.intercepts_label, self.evaluation_label]:
             label.setWordWrap(True)
             layout.addWidget(label)
-
-
-        #Botones
-
+            
+        layout.addStretch()  # Este espaciador empuja los botones de la calculadora hacia abajo
+        
+        # Botones de operadores y números (calculadora)
         button_grid = [[("x²", "x2_button"), ("x³", "x3_button"), ("^", "exp_button"), ("(", "parentesisopen_button"), (")", "parentesisclose_button")],
-                    [("+", "plus_button"), ("-", "minus_button"), ("×", "multiply_button"), ("÷", "divide_button"), ("=", "equal_button")],
-                    [("√", "raiz_button"), ("x", "x_button"), ("π", "pi_button"), ("e", "e_button"), (".", "point_button")],
-                    [("sin", "sin_button"), ("cos", "cos_button"), ("tan", "tan_button"), ("log", "log_button"), ("ln", "ln_button")],
-                    [("C", "clear_button"), ("DEL", "del_button")]
-        ]
+                       [("+", "plus_button"), ("-", "minus_button"), ("×", "multiply_button"), ("÷", "divide_button"), ("=", "equal_button")],
+                       [("√", "raiz_button"), ("x", "x_button"), ("π", "pi_button"), ("e", "e_button"), (".", "point_button")],
+                       [("sin", "sin_button"), ("cos", "cos_button"), ("tan", "tan_button"), ("log", "log_button"), ("ln", "ln_button")],
+                       [("1", "button_1"), ("2", "button_2"), ("3", "button_3"), ("4", "button_4"), ("5", "button_5")],
+                       [("6", "button_6"), ("7", "button_7"), ("8", "button_8"), ("9", "button_9"), ("0", "button_0")]]
 
         for row in button_grid:
             row_layout = QHBoxLayout()
+            row_layout.setSpacing(5)
             for text, attr in row:
                 btn = QPushButton(text)
-                btn.setFixedSize(40 if len(text) <= 1 else 50, 40)
+                # Se eliminó el setFixedSize, ahora los botones se adaptan
+                btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
                 setattr(self, attr, btn)
                 row_layout.addWidget(btn)
             layout.addLayout(row_layout)
-
+        
         # Botones de control
         control_layout = QHBoxLayout()
         self.clear_button = QPushButton("C")
         self.del_button = QPushButton("DEL")
         for btn in [self.clear_button, self.del_button]:
-            btn.setFixedSize(40, 40)
+            # Se eliminó el setFixedSize, ahora los botones se adaptan
+            btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
             control_layout.addWidget(btn)
         layout.addLayout(control_layout)
 
-        layout.addStretch()
         layout.addWidget(self.error_label)
 
         return panel
